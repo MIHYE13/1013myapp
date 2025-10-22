@@ -104,7 +104,7 @@ def main_home_page():
         st.code(
             """
 (프로젝트 폴더)/
-├── 🏠 main_app.py (또는 Home.py)
+├── 🏠 streamlit_app.py
 │
 ├── 📁 pages/
 │   ├── 📄 1_먹이관계_모형.py (page 1 코드)
