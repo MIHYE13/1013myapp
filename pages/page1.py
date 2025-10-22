@@ -263,4 +263,22 @@ st.markdown("""
 
 if st.session_state.user_edges:
     st.markdown("---")
-    st.info("✅ 먹이 모형 구성 완료! 이제 **[2. 생태계 안정성 실험]** 페이지로 가서 실험해 봅시다!")
+    st.info("✅ 먹이 모형 구성 완료! 이제 **[2. 생태계 안정성 실험]** 페이지로 가서 실험해 봅시다!")    import matplotlib.pyplot as plt
+    from matplotlib import font_manager
+    import networkx as nx
+    import streamlit as st
+    import os    def run_simulation_step_by_step(ecosystem_data, change_target, change_type, change_value):
+        # ...existing code...
+        if original_pop == 0:
+            simulation_log.append(f"❌ {change_target}은(는) 현재 생태계에 없습니다.")
+            return population, simulation_log
+            
+        if change_type == "제거 (멸종)":
+            pop_change_amount = -original_pop
+            population[change_target] = 0
+        else:
+            pop_change_amount = int(original_pop * (change_value / 100))
+            population[change_target] = max(0, original_pop + pop_change_amount)            if 'simulated_pop' not in st.session_state or st.session_state.simulated_pop is None:
+                st.session_state.simulated_pop = initial_pop_data.copy()                if not user_edges:
+                    st.warning("먼저 페이지 1에서 먹이그물을 만들어주세요!")
+                    st.stop()
