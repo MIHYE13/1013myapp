@@ -69,8 +69,7 @@ def draw_current_ecosystem(nodes, edges, title):
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
     
-    # --- [수정] 그래프 크기 줄이기 (10, 8) -> (5, 4) ---
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(10, 8))
     pos = nx.spring_layout(G, seed=42, k=0.5) 
     
     # 노드 색상: 영양 단계별로 다르게 설정
@@ -80,26 +79,27 @@ def draw_current_ecosystem(nodes, edges, title):
     # 노드 라벨: 이모지 + 이름
     labels = {node: f"{ECO_DATA[node]['emoji']} {node}" for node in nodes if node in ECO_DATA}
 
-    nx.draw_networkx_nodes(G, pos, node_color=colors, node_size=2000, alpha=0.9) # 노드 크기 줄임
-    nx.draw_networkx_edges(G, pos, edge_color="gray", arrowsize=20, width=1.5) # 화살표/선 크기 줄임
+    nx.draw_networkx_nodes(G, pos, node_color=colors, node_size=4000, alpha=0.9)
+    nx.draw_networkx_edges(G, pos, edge_color="gray", arrowsize=30, width=2)
     
     # 서버측 이미지 렌더링에서 한글을 보이게 하기 위해 로컬 TTF를 FontProperties로 직접 사용
     font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "fonts", "NanumGothic.ttf"))
     
+    # *** (수정 1) fp를 None으로 초기화 ***
     fp = None 
     
     if os.path.exists(font_path):
         fp = font_manager.FontProperties(fname=font_path)
         for n, label in labels.items():
             x, y = pos[n]
-            ax.text(x, y, label, fontproperties=fp, fontsize=8, ha='center', va='center') # 폰트 크기 줄임
+            ax.text(x, y, label, fontproperties=fp, fontsize=12, ha='center', va='center')
     else:
-        nx.draw_networkx_labels(G, pos, labels, font_size=8) # 폰트 크기 줄임
-        if 'fp_warned_p1' not in st.session_state: # 경고 중복 방지
-            st.warning("경고: 폰트 파일(NanumGothic.ttf)을 찾을 수 없습니다. 그래프의 한글이 깨질 수 있습니다.")
-            st.session_state.fp_warned_p1 = True
+        nx.draw_networkx_labels(G, pos, labels, font_size=12)
+        # 폰트가 없을 경우 경고 메시지를 띄워주면 디버깅에 좋습니다.
+        st.warning("경고: 폰트 파일(NanumGothic.ttf)을 찾을 수 없습니다. 그래프의 한글이 깨질 수 있습니다.")
 
-    ax.set_title(title, fontsize=12, fontproperties=fp) # 제목 폰트 크기 줄임
+    # *** (수정 2) 제목(title)에도 동일한 fontproperties(fp)를 적용 ***
+    ax.set_title(title, fontsize=15, fontproperties=fp)
     
     ax.axis('off')
     st.pyplot(fig)
@@ -121,6 +121,8 @@ def check_for_full_chain(G):
         return False
 
     # 3. NetworkX를 이용해 경로 탐색 (BFS/DFS)
+    # P -> 1C -> 2C -> FC 경로가 하나라도 존재하는지 확인
+    
     for p_node in tl_nodes["생산자"]:
         for c1_node in tl_nodes["1차 소비자"]:
             if G.has_edge(p_node, c1_node): # P -> 1C
@@ -187,8 +189,7 @@ if st.button("➕ 선택한 생물들 생태계에 추가하기", key="add_selec
     newly_added_count = 0
     for tl, selection in tl_selection_map.items():
         if selection and selection != '선택 안함':
-            # '도토리'처럼 이름에 공백이 없는 경우 [1] 인덱스가 오류나므로 수정
-            clean_name = " ".join(selection.split(' ')[1:])
+            clean_name = selection.split(' ')[1] 
             
             if clean_name not in st.session_state.user_nodes:
                 st.session_state.user_nodes.append(clean_name)
@@ -234,7 +235,6 @@ with col_button:
             # 완전한 체인 검사 및 풍선 효과 발동
             if not st.session_state.is_chain_completed:
                 G_temp = nx.DiGraph()
-                G_temp.add_nodes_from(st.session_state.user_nodes) # (수정) 노드 추가
                 G_temp.add_edges_from(st.session_state.user_edges)
                 if check_for_full_chain(G_temp):
                     st.session_state.is_chain_completed = True
@@ -264,5 +264,3 @@ st.markdown("""
 if st.session_state.user_edges:
     st.markdown("---")
     st.info("✅ 먹이 모형 구성 완료! 이제 **[2. 생태계 안정성 실험]** 페이지로 가서 실험해 봅시다!")
-
-# (여기서부터 시작된 모든 추가 코드를 삭제했습니다.)
