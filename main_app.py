@@ -1,45 +1,123 @@
 import streamlit as st
+import base64
+from pathlib import Path
 
-def main_page():
-    st.set_page_config(
-        page_title="생태계 먹이사냥꾼",
-        layout="wide",
-        initial_sidebar_state="expanded"
+# --- 1. 페이지 기본 설정 ---
+# 이 설정은 앱의 모든 페이지에 적용됩니다. (가장 먼저 호출되어야 함)
+st.set_page_config(
+    page_title="인터랙티브 생태계 교실",
+    page_icon="🌳",
+    layout="wide",
+)
+
+# --- 2. 전역 한글 폰트 적용 함수 ---
+# CSS를 주입하여 Streamlit의 모든 UI 요소(제목, 텍스트, 버튼 등)에
+# 나눔고딕 폰트를 적용합니다.
+# (Matplotlib 그래프 폰트와는 별개로 UI 자체의 폰트를 설정합니다.)
+
+def inject_nanum_font():
+    """
+    로컬 fonts/NanumGothic.ttf를 base64로 인라인 임베드하여
+    Streamlit 페이지의 모든 텍스트에 적용합니다.
+    """
+    # 폰트 경로 설정 (main_app.py는 fonts 폴더와 같은 레벨에 있다고 가정)
+    font_path = Path(__file__).parent / "fonts" / "NanumGothic.ttf"
+    
+    if not font_path.exists():
+        st.warning(f"폰트 파일을 찾을 수 없습니다: {font_path}")
+        st.warning("UI의 한글 폰트가 깨져 보일 수 있습니다.")
+        return
+
+    try:
+        # 폰트 파일을 base64로 인코딩
+        b64 = base64.b64encode(font_path.read_bytes()).decode("utf-8")
+        
+        # CSS 스타일 정의
+        css = f"""
+        <style>
+        @font-face {{
+            font-family: 'NanumGothicLocal';
+            src: url('data:font/ttf;base64,{b64}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }}
+        
+        /* Streamlit의 모든 UI 요소에 폰트 적용 */
+        html, body, .stApp, [class*="css"] {{
+            font-family: 'NanumGothicLocal', 'NanumGothic', sans-serif !important;
+        }}
+        
+        /* 헤더, 마크다운 텍스트 등에도 명시적으로 적용 */
+        h1, h2, h3, h4, h5, h6, .stMarkdown {{
+            font-family: 'NanumGothicLocal', 'NanumGothic', sans-serif !important;
+        }}
+        </style>
+        """
+        # CSS 주입
+        st.markdown(css, unsafe_allow_html=True)
+    
+    except Exception as e:
+        st.error(f"폰트 주입 중 오류 발생: {e}")
+
+# --- 3. 메인 페이지 UI ---
+
+def main_home_page():
+    
+    # 1. 폰트 주입 실행
+    inject_nanum_font()
+
+    # 2. 메인 타이틀 및 소개
+    st.title("🌳 살아있는 생태계 학습 교실 👩‍🔬")
+    st.markdown("---")
+    
+    st.header("이 웹앱은 생태계의 구성 요소와 안정성을 체험하며 배우는 인터랙티브 학습 도구입니다.")
+    
+    st.info(
+        """
+        **👈 왼쪽 사이드바에서 학습할 페이지를 선택하세요!**
+        
+        1.  **[1. 먹이 관계 모형 만들기]**: 직접 생물 카드를 골라 나만의 먹이그물을 만들어봅니다.
+        2.  **[2. 생태계 안정성 실험]**: 만든 먹이그물에 충격을 주어 생태 피라미드가 어떻게 변하는지 실험합니다.
+        3.  **[3. 모형 완성 확인 및 퀴즈]**: 완성된 모형의 복잡도를 확인하고, 핵심 개념 퀴즈를 풀어봅니다.
+        """
     )
+    
+    st.markdown("---")
 
-    st.title("🌿🌍 생태계 먹이사냥꾼: 먹이 관계와 안정성 학습")
+    # 3. 앱 구조 안내
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("🎯 학습 목표")
+        st.markdown(
+            """
+            - 생물과 비생물 요소를 구분하고, 생태계 구성 요소를 이해합니다.
+            - 먹이사슬과 먹이그물의 관계를 파악합니다.
+            - 생태 피라미드의 개념을 이해합니다.
+            - **먹이그물이 복잡할수록 생태계가 안정적으로 유지됨**을 실험을 통해 깨닫습니다.
+            """
+        )
 
-    st.markdown("""
-    ## ✨ 학습 주제: 생물의 먹고 먹히는 관계 ✨
-    
-    생태계의 생물 요소들은 서로 먹고 먹히는 관계에 있습니다. 이 관계를 알아보면서
-    **먹이사슬**과 **먹이그물**의 개념을 이해하고, 생태계가 어떻게 **안정적으로 유지**되는지 실험을 통해 확인해 봅시다.
-    
-    ---
-    
-    ### 🔑 주요 학습 내용 (교과서 48-49쪽)
-    
-    | 개념 | 설명 |
-    | :--- | :--- |
-    | **먹이사슬** | 생물이 서로 먹고 먹히는 관계가 **사슬처럼 연결**된 것 (예: 토끼풀 → 토끼 → 뱀) |
-    | **먹이그물** | **여러 개의 먹이사슬이 그물처럼 복잡하게 얽혀 있는 것** |
-    | **생태계 안정성** | 먹이그물이 **복잡할수록** 한 생물이 사라져도 다른 먹이로 살아갈 수 있어 생태계가 **안정적으로 유지**되는 성질 |
-    
-    ---
-    
-    ### 🚀 학습 시작 (3단계 활동)
-    
-    **좌측 사이드바**를 눌러 아래 세 가지 활동을 순서대로 진행해 보세요.
-    
-    | 순서 | 페이지 이름 | 활동 목표 |
-    | :--- | :--- | :--- |
-    | **1.** | **[1. 먹이 관계 모형 만들기]** | 생물 간의 먹이 관계를 직접 구성하여 먹이그물의 모양을 이해합니다. |
-    | **2.** | **[2. 생태계 안정성 실험]** | 특정 생물의 변화가 먹이그물 전체에 미치는 영향을 시뮬레이션하여 안정성 원리를 파악합니다. |
-    | **3.** | **[3. 모형 완성 확인]** | 학습한 내용을 바탕으로 최종 모형을 검토하고 개념 퀴즈를 풀어봅니다. |
-    
-    
-    준비되셨나요? **[1. 먹이 관계 모형 만들기]** 페이지로 출발!
-    """)
+    with col2:
+        st.subheader("📂 앱 파일 구조 (권장)")
+        st.code(
+            """
+(프로젝트 폴더)/
+├── 🏠 main_app.py (또는 Home.py)
+│
+├── 📁 pages/
+│   ├── 📄 1_먹이관계_모형.py (page 1 코드)
+│   ├── 📄 2_생태계_안정성_실험.py (page 2 코드)
+│   └── 📄 3_개념_퀴즈.py (page 3 코드)
+│
+└── 📁 fonts/
+    └── 📄 NanumGothic.ttf (한글 폰트 파일)
+            """,
+            language="bash"
+        )
+        st.caption("※ `pages` 폴더 안의 파일 이름이 사이드바에 표시됩니다.")
 
+# --- 4. 앱 실행 ---
 if __name__ == "__main__":
-    main_page()
+    main_home_page()
