@@ -57,3 +57,45 @@ def inject_nanum_font():
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+    # 추가적으로 자바스크립트를 통해 동적 생성 요소와 Shadow DOM에 폰트를 강제 적용합니다.
+    js = """
+    <script>
+    (function(){
+        const font = "'NanumGothicLocal', 'Nanum Gothic', sans-serif";
+        try{
+            document.documentElement.style.fontFamily = font;
+        }catch(e){}
+
+        function applyFont(root){
+            try{
+                if(root instanceof Element){
+                    root.style.fontFamily = font;
+                }
+            }catch(e){}
+            try{
+                // 모든 자식에 적용
+                root.querySelectorAll && root.querySelectorAll('*').forEach(function(el){
+                    try{ el.style.fontFamily = font; }catch(e){}
+                });
+            }catch(e){}
+            // Shadow DOM도 순회
+            try{
+                const nodes = root.querySelectorAll && root.querySelectorAll('*') || [];
+                nodes.forEach(function(n){
+                    try{
+                        if(n.shadowRoot){
+                            applyFont(n.shadowRoot);
+                        }
+                    }catch(e){}
+                });
+            }catch(e){}
+        }
+
+        // 동적으로 생성되는 요소에도 적용되도록 주기적으로 실행
+        setInterval(function(){
+            try{ applyFont(document); }catch(e){}
+        }, 500);
+    })();
+    </script>
+    """
+    st.markdown(js, unsafe_allow_html=True)
